@@ -1,8 +1,8 @@
 plugins {
-    id("java")
+    kotlin("jvm") version "1.9.0"
 }
 
-group = "com.example"
+group = "com.example.miruro"
 version = "1.0.0"
 
 repositories {
@@ -11,20 +11,29 @@ repositories {
 }
 
 dependencies {
+    // CloudStream API (from JitPack)
     implementation("com.github.recloudstream:cloudstream3:master-SNAPSHOT")
+    // HTML parser (for scraping)
     implementation("org.jsoup:jsoup:1.15.3")
 }
 
-tasks.register<Jar>("make") {
-    archiveExtension.set("cs3")
-    from(sourceSets.main.get().output)
-    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    manifest {
-        attributes["Main-Class"] = "com.example.miruro.MiruroProvider"
-    }
+// Configure Kotlin compilation
+kotlin {
+    jvmToolchain(17)
 }
 
+// Task to build the .cs3 file (CloudStream extension)
+tasks.register<Jar>("make") {
+    archiveBaseName.set("miruro")
+    archiveExtension.set("cs3")
+    from(sourceSets.main.get().output)
+    from(configurations.runtimeClasspath.get().map { 
+        if (it.isDirectory) it else zipTree(it) 
+    })
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+// Task to generate plugins.json (metadata)
 tasks.register("makePluginsJson") {
     doLast {
         val json = """
@@ -42,4 +51,9 @@ tasks.register("makePluginsJson") {
         """.trimIndent()
         file("build/plugins.json").writeText(json)
     }
+}
+
+// Make 'make' and 'makePluginsJson' run together
+tasks.named("make") {
+    dependsOn("makePluginsJson")
 }
