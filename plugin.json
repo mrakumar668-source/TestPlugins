@@ -1,0 +1,11 @@
+{
+  "name": "Miruro",
+  "description": "Watch anime from Miruro.tv",
+  "language": "en",
+  "plugins": [
+    {
+      "name": "Miruro",
+      "main": "com.example.miruro.MiruroProvider"
+    }
+  ]
+}
